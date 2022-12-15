@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  						"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- ** <mapper> => 최상위 태그 ** -->
+<mapper namespace="mapperInterface.JoMapper">
+
+	<!-- RTestController - getList Test -->
+	<select id="selectList" resultType="vo.JoVO"> <!-- List Type -->
+		select * from jo
+	</select> 
+
+	<!-- 원래 Test용 id : selectList로 변경 후 Test해야 함 -->
+	<select id="selectList22" resultType="vo.JoVO"> <!-- List Type -->
+		<!-- select * from memjo
+		order by jno -->
+		
+	<!-- Chief 옆에 조장 이름 출력하기위해 member Table과 Join 또는 subQuery -->
+		select j.jno, chief, jname, note, m.name
+		from memjo j, member m
+		where chief = id <!-- j.chief = m.id -->
+		order by jno
+	</select>
+
+	<select id="selectOne" resultType="vo.JoVO"> <!-- Mybatis는 type을 알아서! -->
+		select * from memjo
+		where jno = #{jno}
+	</select>
+	
+	<!-- ** insert, update, delete는 return type이 int로 정해져있기 때문에 resultType 없어도 됨 -->
+	<insert id="insert">
+		insert into memjo values (#{jno}, #{chief}, #{jname}, #{note})
+	</insert>
+	
+	<update id="update">
+		update memjo set chief = #{chief}, jname = #{jname}, note = #{note} 
+		where jno = #{jno}
+	</update>
+
+	<delete id="delete">
+		delete from memjo 
+		where jno = #{jno}
+	</delete>
+
+</mapper>

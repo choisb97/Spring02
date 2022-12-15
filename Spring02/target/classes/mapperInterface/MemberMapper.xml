@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  						"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- ** <mapper> => 최상위 태그 ** -->
+<mapper namespace="mapperInterface.MemberMapper">
+
+<!-- ** Interface를 통해 ~ Mapper 접근
+	=> interface ~ Mapper.java의 패키지명 & 파일명과 
+	   ~ Mapper.xml의 패키지명 & 파일명 & namespace 값은 같아야 됨.
+	   
+	=> namespace : 자바클래스에서 mapper를 찾는 경로
+	               다른 mapper와 중복되지 않도록 네임스페이스 기재.
+-->
+
+<!-- ** Mapper 기본 문법 **
+	1) #{id} : parameter로 전달된 vo의 id라는 컬럼의 value가 전달 됨.
+				-> getId()로 처리 함.
+	2) ${id} : id라는 필드 표현.
+	
+	3) CDATA : XML에서는 <, > 등 비교연산자의 경우 XML 규칙상 에러 발생하기 때문에
+	           이 기호를 연산자로 인식하도록 하기 위해서는 SQL문을 CDATA로 묶어주어야 한다.
+	           ex) -> <![CDATA[SELECT * FROM table WHERE id > 1 ]]>
+	           
+	4) 조건문, 반복문, include, selectKey 등       
+-->
+
+	<!-- 
+		***** 반복문 : Member Check List ****************************************** 
+		=> select * from member where lev in ('A', 'B', 'C') order by id asc (추천)
+		   select * from member where lev = 'A' or lev = 'B' or lev = 'C' order by id asc (비추0
+		=> mapper에 반복문 적용하기 : <foreach.......
+		   비교 Java for : for (Type(String) 변수(lev) : 배열(levArr))
+		=> mapper foreach :
+		   <foreach ....index = "index"...>
+		   		.... "${index}" : index 값 사용하기
+		   			  사용하지 않는 경우 아래처럼 표시해도 되고, 생략해도 됨.
+		   <foreach .... index = "" open = "(" close = ")" separator = ",">
+		
+		=> collection : list 또는 array Type의 매개변수 (vo에 정의된 변수 사용)
+		   item : collection의 데이터를 한 건씩 전달받으며 위의 구문을 완성함.
+		   index : 필요 시 사용, 0부터 시작(0, 1, 2...)
+		=> (Type(String) 변수(lev) : 배열(levArr))
+		                  item        collection
+		                  
+		=> Oracle, DECODE 적용 예
+		   ~ DECODE(lev, 'A', 관리자,
+	-->
+	<select id="checkList" resultType="vo.MemberVO">
+		select * from member 
+		where jno in 
+		<foreach collection="check" item="it" open="(" close=")" separator=",">
+			#{it}
+		</foreach>
+		order by jno asc, id asc
+	</select>
+
+	<!-- ***** SearchCriteria Page List ********************************* -->
+	<sql id="search">
+		<if test="keyword != null">
+			<bind name="keyVal" value="'%' + keyword + '%'"/>
+		</if>
+		
+		<choose>
+			<when test="searchType == 'i'.toString()">
+				and id like #{keyVal}) <!-- 컬럼명 같아야 됨 -->
+			</when>
+			
+			<when test="searchType == 'a'.toString()">
+				and name like #{keyVal})
+			</when>
+			
+			<when test="searchType == 'f'.toString()">
+				and info like #{keyVal})
+			</when>
+			
+			<when test="searchType == 'j'.toString()">
+				and jno like #{keyVal}) <!-- 컬럼명 같아야 됨 -->
+			</when>
+			
+			<when test="searchType == 'b'.toString()">
+				and birthday like #{keyVal})
+			</when>
+			
+			<when test="searchType == 'in'.toString()">
+				and id like #{keyVal}
+				or name like #{keyVal})
+			</when>
+			
+			<otherwise>
+				)
+			</otherwise>
+		</choose>
+	</sql>
+	
+	<select id="searchList" resultType="vo.MemberVO">
+		select * from member 
+		where (id != "admin" <include refid="search"></include>
+		order by id asc
+		limit #{sno}, #{rowsPerPage}
+	</select>
+	
+	<select id="searchCount" resultType="int">
+		select count(*) from member
+		where (id != "admin" <include refid="search"></include>
+	</select>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+<!-- ** JUnit Test : totalCount
+		=> admin을 제외한 전체 member count 메서드 추가 후 Test
+		=> MemberMapper Interface에 int totalCount(); 등록해야 함 -->
+	<select id="totalCount" resultType="int">
+		select count(*) from member
+		where id != "admin"
+	</select>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+	<select id="selectList" resultType="vo.MemberVO"> <!-- List Type -->
+		<!--
+		select * from member 
+		where id != "admin"
+		 
+		** CDATA 사용법 예 -->
+		<![CDATA[ select * from member where id <> "admin" ]]>
+	</select>
+
+	<select id="selectOne" resultType="vo.MemberVO"> <!-- Mybatis는 type을 알아서! -->
+		select * from member 
+		where id = #{id}
+		<!-- #{id} : parameter로 전달된 vo의 id라는 컬럼의 value가 전달 됨.
+					-> getId()로 처리함 -->
+	</select>
+	
+	<!-- ** insert, update, delete는 return type이 int로 정해져있기 때문에 resultType 없어도 됨 -->
+	<insert id="insert">
+		insert into member values (#{id}, #{password}, #{name}, #{info}, #{birthday}, #{jno}, #{age}, #{point}, #{uploadfile})
+	</insert>
+	
+	<update id="update">
+		update member set password = #{password}, name = #{name}, info = #{info}, 
+		birthday = #{birthday}, jno = #{jno}, age = #{age}, point = #{point}, uploadfile = #{uploadfile} where id = #{id}
+	</update>
+
+	<delete id="delete">
+		delete from member 
+		where id = #{id}
+	</delete>
+	
+	<!-- REST API, @Param 적용 Test -->
+	<select id="rsDetail" resultType="vo.MemberVO">
+		select * from member 
+		where id = #{id} and jno = #{jno}
+	</select>
+
+</mapper>

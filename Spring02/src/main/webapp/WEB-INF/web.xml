@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee; https://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/root-context.xml</param-value>
+	</context-param>
+	
+	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Processes application requests -->
+	<servlet>
+		<servlet-name>appServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+		
+	<servlet-mapping>
+		<servlet-name>appServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	<!-- 
+	** url-pattern
+	/ => 모든 요청은 받지만 처리 못 하는 것은 넘기겠다.
+		(처리 안 되는 부분이 있다면 xml에 추가적으로 필요한 코드를 작성함)
+		
+	/* => 모든 요청을 자기가 처리하겠다.
+	-->	
+
+	<!-- 한글 처리 필터 -->
+	<filter>
+		<filter-name>testFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter
+		</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>testFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+		<!-- /* => 모든 요청을 자기가 처리하겠다. -->
+	</filter-mapping>
+	
+	<!-- ******** Exception 설정 *************************************************************-->
+	
+	<!-- Exception Test
+		=> 스프링의 "exceptionResolver" 설정하면 우선 적용되므로 500은 전달되지 않음, 그러나 404는 전달됨
+		=> Spring Security Test 시에는 막아놓고 한다. 
+		1) 응답상태코드 -->
+	<error-page>
+		<error-code>404</error-code>
+		<location>/WEB-INF/views/errorPage/exception_404.jsp</location>
+	</error-page>
+	
+	<error-page>
+		<error-code>500</error-code>
+		<location>/WEB-INF/views/errorPage/exception_500.jsp</location>
+	</error-page>
+  
+	<!-- Exception Test : Exception Type 
+	<error-page>
+		<exception-type>java.lang.NullPointerException</exception-type>
+		<location>/WEB-INF/views/errorPage/npException.jsp</location>
+	</error-page>
+	
+	<error-page>
+		<exception-type>java.lang.ArithmeticException</exception-type>
+		<location>/WEB-INF/views/errorPage/arExceptionMessage.jsp</location>
+	</error-page>
+	-->
+	
+</web-app>
